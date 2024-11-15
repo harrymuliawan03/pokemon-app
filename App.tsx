@@ -1,118 +1,97 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- */
-
+// App.js
 import React from 'react';
-import type {PropsWithChildren} from 'react';
-import {
-  SafeAreaView,
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  useColorScheme,
-  View,
-} from 'react-native';
+import {NavigationContainer} from '@react-navigation/native';
+import HomeScreen from './src/screens/home';
+import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
+import CompareScreen from './src/screens/compare';
+import {Image, View} from 'react-native';
+import {createNativeStackNavigator} from '@react-navigation/native-stack';
+import PokemonDetailScreen from './src/screens/detail-pokemon';
+import {RootStackParamList} from './src/types/navigation';
+import {AppRegistry} from 'react-native';
+import {enableScreens} from 'react-native-screens';
 
-import {
-  Colors,
-  DebugInstructions,
-  Header,
-  LearnMoreLinks,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
+const Stack = createNativeStackNavigator<RootStackParamList>();
+const Tab = createBottomTabNavigator();
 
-type SectionProps = PropsWithChildren<{
-  title: string;
-}>;
-
-function Section({children, title}: SectionProps): React.JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
+const PokemonStack = () => {
   return (
-    <View style={styles.sectionContainer}>
-      <Text
-        style={[
-          styles.sectionTitle,
-          {
-            color: isDarkMode ? Colors.white : Colors.black,
-          },
-        ]}>
-        {title}
-      </Text>
-      <Text
-        style={[
-          styles.sectionDescription,
-          {
-            color: isDarkMode ? Colors.light : Colors.dark,
-          },
-        ]}>
-        {children}
-      </Text>
-    </View>
-  );
-}
-
-function App(): React.JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
-
-  const backgroundStyle = {
-    backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
-  };
-
-  return (
-    <SafeAreaView style={backgroundStyle}>
-      <StatusBar
-        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
-        backgroundColor={backgroundStyle.backgroundColor}
+    <Stack.Navigator initialRouteName="PokemonList">
+      <Stack.Screen
+        name="PokemonList"
+        component={HomeScreen}
+        options={{headerShown: false}}
       />
-      <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        style={backgroundStyle}>
-        <Header />
-        <View
-          style={{
-            backgroundColor: isDarkMode ? Colors.black : Colors.white,
-          }}>
-          <Section title="Step One">
-            Edit <Text style={styles.highlight}>App.tsx</Text> to change this
-            screen and then come back to see your edits.
-          </Section>
-          <Section title="See Your Changes">
-            <ReloadInstructions />
-          </Section>
-          <Section title="Debug">
-            <DebugInstructions />
-          </Section>
-          <Section title="Learn More">
-            Read the docs to discover what to do next:
-          </Section>
-          <LearnMoreLinks />
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+      <Stack.Screen
+        name="PokemonDetail"
+        component={PokemonDetailScreen}
+        options={{headerShown: false}}
+      />
+    </Stack.Navigator>
+  );
+};
+enableScreens();
+
+AppRegistry.registerComponent('PokemonApps', () => App);
+function App() {
+  // const Stack = createStackNavigator<RootStackParamList>();
+  return (
+    <NavigationContainer>
+      <Tab.Navigator
+        screenOptions={({route}) => ({
+          tabBarIcon: ({focused}) => {
+            let iconSource;
+
+            if (route.name === 'Home') {
+              iconSource = focused
+                ? require('./assets/images/home-icon-active.png')
+                : require('./assets/images/home-icon.png');
+            } else if (route.name === 'Compare') {
+              return (
+                <View style={{flexDirection: 'row', gap: 3}}>
+                  <Image
+                    source={require('./assets/images/pokemon-icon.png')}
+                    style={{width: 24, height: 24}}
+                    resizeMode="contain"
+                  />
+                  <Image
+                    source={require('./assets/images/pokemon-icon.png')}
+                    style={{width: 24, height: 24}}
+                    resizeMode="contain"
+                  />
+                </View>
+              );
+            }
+
+            return (
+              <Image
+                source={iconSource}
+                style={{width: 24, height: 24}}
+                resizeMode="contain"
+              />
+            );
+          },
+          tabBarLabelStyle: {
+            fontSize: 14,
+          },
+          headerShown: false,
+          tabBarActiveTintColor: 'tomato',
+          tabBarInactiveTintColor: 'gray',
+        })}>
+        <Tab.Screen
+          name="Home"
+          component={PokemonStack}
+          listeners={({navigation}) => ({
+            tabPress: e => {
+              e.preventDefault();
+              navigation.navigate('PokemonList');
+            },
+          })}
+        />
+        <Tab.Screen name="Compare" component={CompareScreen} />
+      </Tab.Navigator>
+    </NavigationContainer>
   );
 }
-
-const styles = StyleSheet.create({
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
-  },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '600',
-  },
-  sectionDescription: {
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: '400',
-  },
-  highlight: {
-    fontWeight: '700',
-  },
-});
 
 export default App;
