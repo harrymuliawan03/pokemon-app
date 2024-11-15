@@ -6,7 +6,7 @@ import {PokemonModel} from '../models/pokemon.model';
 
 class PokemonStore {
   pokemonData: PokemonModel[] = [];
-  offset = 0;
+  offset = 25;
   limit = 25;
   loading = false;
 

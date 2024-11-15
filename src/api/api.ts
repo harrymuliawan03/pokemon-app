@@ -3,6 +3,7 @@ import {API_URL} from './env';
 
 export const getData = async (url: string): Promise<any> => {
   try {
+    console.log(`${API_URL}${url}`);
     const config: AxiosRequestConfig = {
       headers: {
         Accept: 'application/json',
