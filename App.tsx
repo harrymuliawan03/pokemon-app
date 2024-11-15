@@ -1,4 +1,3 @@
-// App.js
 import React from 'react';
 import {NavigationContainer} from '@react-navigation/native';
 import HomeScreen from './src/screens/home';
@@ -34,7 +33,6 @@ enableScreens();
 
 AppRegistry.registerComponent('PokemonApps', () => App);
 function App() {
-  // const Stack = createStackNavigator<RootStackParamList>();
   return (
     <NavigationContainer>
       <Tab.Navigator

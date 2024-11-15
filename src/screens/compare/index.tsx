@@ -5,35 +5,20 @@ import {
   Image,
   TouchableOpacity,
   StyleSheet,
-  ActivityIndicator,
   Dimensions,
-  Pressable,
+  ScrollView,
 } from 'react-native';
 import {BarChart} from 'react-native-gifted-charts';
-import {
-  Gesture,
-  GestureDetector,
-  GestureHandlerRootView,
-  FlatList,
-} from 'react-native-gesture-handler';
+import {GestureHandlerRootView} from 'react-native-gesture-handler';
 import {PokemonDataModel, PokemonModel} from '../../models/pokemon.model';
-import PokemonCard from '../../shared/components/PokemonCard';
 import {pokemonStore} from '../../store/PokemonStore';
 import axios from 'axios';
 import {abbreviateLabel} from '../../shared/helpers/abbreviate-label';
 import {useFocusEffect} from '@react-navigation/native';
 import {capitalizeName} from '../../shared/helpers/capitalize-name';
-import Animated, {
-  FadeIn,
-  FadeOut,
-  runOnJS,
-  SlideInDown,
-  SlideOutDown,
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
-  withTiming,
-} from 'react-native-reanimated';
+import {useSharedValue} from 'react-native-reanimated';
+import NotesStat from '../../shared/components/NotesStat';
+import ModalPokemonList from '../../modules/compare/components/ModalPokemonList';
 
 const CompareScreen = () => {
   const [selectedPokemon1, setSelectedPokemon1] =
@@ -43,17 +28,13 @@ const CompareScreen = () => {
   const [triggerFetchData, setTriggerFetchData] = useState<boolean | null>(
     null,
   );
+
+  // State for modal bottom sheet
   const [currentDialog, setCurrentDialog] = useState<number>(1);
-  const bottomSheetRef = useRef<any>(null);
   const [isOpen, setOpen] = useState(false);
   const flatListRef = useRef<any>(null);
-
-  let currentOffset = 0;
-
-  const handleScroll = event => {
-    const offsetY = event.nativeEvent.contentOffset.y;
-    setCurrentOffset(offsetY);
-  };
+  const offset = useSharedValue(0);
+  let currentOffsetModal = 0;
 
   const handlePokemonSelect = async (pokemon: PokemonModel, index: number) => {
     const completePokemonData = await axios.get(pokemon.url!);
@@ -69,37 +50,22 @@ const CompareScreen = () => {
     toggleSheet();
   };
 
-  const renderFooter = () => {
-    if (pokemonStore.loading) {
-      return <ActivityIndicator size="large" color="#ff0000" />;
-    } else {
-      return null;
-    }
-  };
-
   const handleLoadMore = () => {
     setTriggerFetchData(!triggerFetchData);
     if (flatListRef.current) {
       flatListRef.current.scrollToOffset({
-        offset: Math.max(currentOffset - 20, 0),
+        offset: Math.max(currentOffsetModal - 20, 0),
         animated: true,
       });
 
       setTimeout(() => {
         flatListRef.current.scrollToOffset({
-          offset: Math.max(currentOffset + 20, 0),
+          offset: Math.max(currentOffsetModal + 20, 0),
           animated: true,
         });
       }, 300);
     }
   };
-
-  const renderItem = ({item}: {item: PokemonModel}) => (
-    <PokemonCard
-      item={item}
-      handlePress={() => handlePokemonSelect(item, currentDialog)}
-    />
-  );
 
   const renderBarChart = () => {
     let data;
@@ -142,7 +108,7 @@ const CompareScreen = () => {
     return (
       <BarChart
         data={data}
-        width={Dimensions.get('window').width}
+        width={Dimensions.get('window').width / 1.3}
         height={220}
         barWidth={20}
         yAxisTextStyle={{
@@ -174,132 +140,135 @@ const CompareScreen = () => {
     }
   }, [triggerFetchData]);
 
-  const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
-  const accent = useSharedValue('#ff0000');
-  const offset = useSharedValue(0);
-
   const toggleSheet = () => {
     setOpen(!isOpen);
     offset.value = 0;
   };
 
-  const pan = Gesture.Pan()
-    .onChange(event => {
-      const offsetDelta = event.changeY + offset.value;
-
-      const clamp = Math.max(-20, offsetDelta);
-      offset.value = offsetDelta > 0 ? offsetDelta : withSpring(clamp);
-    })
-    .onFinalize(() => {
-      if (offset.value < 500 / 3) {
-        offset.value = withSpring(0);
-      } else {
-        offset.value = withTiming(500, {}, () => {
-          runOnJS(toggleSheet)();
-        });
-      }
-    });
-
-  const translateY = useAnimatedStyle(() => ({
-    transform: [{translateY: offset.value}],
-  }));
-
   return (
     <GestureHandlerRootView style={styles.scrollContainer}>
-      <View style={styles.selectedContainer}>
-        <TouchableOpacity
-          style={styles.pokemonCard}
-          onPress={() => {
-            setCurrentDialog(1);
-            setSelectedPokemon1(null);
-            setOpen(true);
-            bottomSheetRef.current?.expand();
-          }}>
-          {selectedPokemon1 ? (
-            <>
-              <Image
-                style={styles.pokemonImage}
-                source={{uri: selectedPokemon1.imageUrl}}
-              />
-              <Text style={styles.pokemonName}>{selectedPokemon1.name}</Text>
-            </>
-          ) : (
-            <Text>Select Pokemon 1</Text>
-          )}
-        </TouchableOpacity>
+      <ScrollView showsVerticalScrollIndicator={false}>
+        <Image
+          source={require('./../../../assets/images/bg-pokemon-3.png')}
+          style={{
+            width: Dimensions.get('window').width,
+            objectFit: 'contain',
+          }}
+        />
+        <Text style={styles.title}>Compare</Text>
 
-        <TouchableOpacity
-          style={styles.pokemonCard}
-          onPress={() => {
-            setCurrentDialog(2);
-            setSelectedPokemon2(null);
-            setOpen(true);
-            bottomSheetRef.current?.expand();
-          }}>
-          {selectedPokemon2 ? (
-            <>
-              <Image
-                style={styles.pokemonImage}
-                source={{uri: selectedPokemon2.imageUrl}}
-              />
-              <Text style={styles.pokemonName}>{selectedPokemon2.name}</Text>
-            </>
-          ) : (
-            <Text>Select Pokemon 2</Text>
-          )}
-        </TouchableOpacity>
-      </View>
+        <View style={styles.container}>
+          <View style={styles.selectedContainer}>
+            <TouchableOpacity
+              style={[
+                styles.pokemonCard,
+                {backgroundColor: 'background-color: rgba(255, 0, 0, 0.5)'},
+              ]}
+              onPress={() => {
+                setCurrentDialog(1);
+                setSelectedPokemon1(null);
+                setOpen(true);
+              }}>
+              {selectedPokemon1 ? (
+                <>
+                  <Image
+                    style={styles.pokemonImage}
+                    source={{uri: selectedPokemon1.imageUrl}}
+                  />
+                  <Text style={styles.pokemonName}>
+                    {selectedPokemon1.name}
+                  </Text>
+                </>
+              ) : (
+                <Text style={styles.pokemonSelect}>Select Pokemon 1</Text>
+              )}
 
-      {renderBarChart()}
+              {/* Pointer */}
+              {selectedPokemon1 && selectedPokemon2 && (
+                <View style={[styles.pointer, {backgroundColor: 'red'}]} />
+              )}
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.pokemonCard,
+                {backgroundColor: 'rgba(0, 0, 255, 0.6)'},
+              ]}
+              onPress={() => {
+                setCurrentDialog(2);
+                setSelectedPokemon2(null);
+                setOpen(true);
+              }}>
+              {selectedPokemon2 ? (
+                <>
+                  <Image
+                    style={styles.pokemonImage}
+                    source={{uri: selectedPokemon2.imageUrl}}
+                  />
+                  <Text style={styles.pokemonName}>
+                    {selectedPokemon2.name}
+                  </Text>
+                </>
+              ) : (
+                <Text style={styles.pokemonSelect}>Select Pokemon 2</Text>
+              )}
+
+              {/* Pointer */}
+              {selectedPokemon1 && selectedPokemon2 && (
+                <View style={[styles.pointer, {backgroundColor: 'blue'}]} />
+              )}
+            </TouchableOpacity>
+          </View>
+
+          {/* Bar Chart Comparison */}
+          {renderBarChart()}
+
+          {/* Notes */}
+          {selectedPokemon1 && selectedPokemon2 && <NotesStat />}
+        </View>
+      </ScrollView>
+
+      {/* Modal Pokemon List */}
       {isOpen && (
-        <>
-          <AnimatedPressable
-            style={styles.backdrop}
-            entering={FadeIn}
-            exiting={FadeOut}
-            onPress={toggleSheet}
-          />
-          <GestureDetector gesture={pan}>
-            <Animated.View
-              style={[styles.sheet, translateY]}
-              entering={SlideInDown.springify().damping(15)}
-              exiting={SlideOutDown}>
-              <View style={styles.dialogHeader}>
-                <Text style={styles.dialogTitle}>Choose Pokemon</Text>
-                <TouchableOpacity onPress={toggleSheet}>
-                  <Text style={styles.closeButton}>Close</Text>
-                </TouchableOpacity>
-              </View>
-              <FlatList
-                data={pokemonStore.pokemonData}
-                ref={flatListRef}
-                renderItem={renderItem}
-                keyExtractor={(_, index) => index.toString()}
-                numColumns={2}
-                columnWrapperStyle={styles.row}
-                onScroll={event => {
-                  currentOffset = event.nativeEvent.contentOffset.y;
-                }}
-                contentContainerStyle={{zIndex: 2}}
-                onEndReached={handleLoadMore}
-                ListFooterComponent={renderFooter}
-              />
-            </Animated.View>
-          </GestureDetector>
-        </>
+        <ModalPokemonList
+          flatListRef={flatListRef}
+          toggleSheet={toggleSheet}
+          handlePokemonSelect={item => handlePokemonSelect(item, currentDialog)}
+          handleLoadMore={handleLoadMore}
+          handleScroll={event =>
+            (currentOffsetModal = event.nativeEvent.contentOffset.y)
+          }
+          offset={offset}
+        />
       )}
     </GestureHandlerRootView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {flex: 1, padding: 20},
-  scrollContainer: {flexGrow: 1, justifyContent: 'center'},
+  scrollContainer: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255, 209, 29, 0.1)',
+  },
+  container: {
+    maxWidth: Dimensions.get('window').width,
+    padding: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  title: {
+    textAlign: 'center',
+    fontSize: 30,
+    fontWeight: 'bold',
+    marginTop: -10,
+  },
   selectedContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
     gap: 10,
-    marginBottom: 20,
+    marginBottom: 40,
   },
   row: {
     justifyContent: 'space-between',
@@ -310,6 +279,15 @@ const styles = StyleSheet.create({
     margin: 6,
     backgroundColor: '#eee',
   },
+  pointer: {
+    height: 13,
+    width: 13,
+    borderRadius: 13,
+    position: 'absolute',
+    bottom: -25,
+    borderWidth: 2,
+    borderColor: 'black',
+  },
   pokemonCard: {
     width: '45%',
     alignItems: 'center',
@@ -317,8 +295,14 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 10,
   },
-  pokemonImage: {width: 50, height: 50},
-  pokemonName: {fontWeight: 'bold', marginTop: 10},
+  pokemonSelect: {fontWeight: 'bold', color: 'white'},
+  pokemonImage: {width: 100, height: 100},
+  pokemonName: {
+    fontWeight: 'bold',
+    marginTop: 10,
+    color: 'white',
+    fontSize: 16,
+  },
   bottomSheetContainer: {padding: 20, backgroundColor: '#f0f0f0'},
   dialogHeader: {
     flexDirection: 'row',

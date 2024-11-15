@@ -22,6 +22,7 @@ import {typeColorMap} from '../../constants/background_color';
 import {fontFamilies} from '../../constants/font';
 import {abbreviateLabel} from '../../shared/helpers/abbreviate-label';
 import {capitalizeName} from '../../shared/helpers/capitalize-name';
+import NotesStat from '../../shared/components/NotesStat';
 
 type PokemonDetailRouteProp = RouteProp<RootStackParamList, 'PokemonDetail'>;
 
@@ -103,7 +104,9 @@ const PokemonDetailScreen: React.FC<PokemonDetailProps> = ({navigation}) => {
   }));
 
   return (
-    <ScrollView contentContainerStyle={[styles.container, {backgroundColor}]}>
+    <ScrollView
+      contentContainerStyle={[styles.container, {backgroundColor}]}
+      showsVerticalScrollIndicator={false}>
       <TouchableOpacity
         style={styles.backButton}
         onPress={() => navigation.goBack()}>
@@ -260,20 +263,9 @@ const PokemonDetailScreen: React.FC<PokemonDetailProps> = ({navigation}) => {
             }}
           />
         </View>
-        <View style={styles.noteContainer}>
-          <Text style={styles.noteTitle}>Stat Abbreviations:</Text>
-          <Text style={styles.noteText}>
-            <Text style={styles.noteAbbreviation}>H</Text> = HP (Health Points){' '}
-            {'\n'}
-            <Text style={styles.noteAbbreviation}>A</Text> = Attack {'\n'}
-            <Text style={styles.noteAbbreviation}>D</Text> = Defense {'\n'}
-            <Text style={styles.noteAbbreviation}>SA</Text> = Special Attack{' '}
-            {'\n'}
-            <Text style={styles.noteAbbreviation}>SD</Text> = Special Defense{' '}
-            {'\n'}
-            <Text style={styles.noteAbbreviation}>S</Text> = Speed {'\n'}
-          </Text>
-        </View>
+
+        {/* Pokemon Notes and Stat Abbreviations */}
+        <NotesStat />
 
         {/* Pokemon Abilities */}
         <Text style={[styles.sectionTitle, {color: backgroundColor}]}>
@@ -333,11 +325,10 @@ const styles = StyleSheet.create({
     top: -110,
   },
   title: {
-    fontSize: 30,
-    fontWeight: 'bold',
+    fontSize: 20,
     color: '#fff',
     fontFamily: fontFamilies.p2p,
-    marginVertical: 10,
+    marginVertical: 15,
   },
   info: {
     fontSize: 16,
@@ -370,20 +361,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   divider: {height: '70%', borderWidth: 0.5, borderColor: '#a0a0a0'},
-  noteContainer: {
-    marginTop: 15,
-    paddingHorizontal: 15,
-    paddingVertical: 10,
-    backgroundColor: '#ffffff',
-    borderRadius: 8,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    width: '100%',
-    elevation: 3,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
   typeText: {
     color: '#fff',
     fontSize: 12,
@@ -391,21 +368,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 5,
     borderRadius: 20,
-  },
-  noteTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 5,
-  },
-  noteText: {
-    fontSize: 14,
-    color: '#666',
-    lineHeight: 20,
-  },
-  noteAbbreviation: {
-    fontWeight: 'bold',
-    color: '#3B4CCA',
   },
   abilitiesContainer: {
     flexDirection: 'column',

@@ -1,4 +1,3 @@
-// stores/PokemonStore.ts
 import {makeAutoObservable, runInAction} from 'mobx';
 import axios from 'axios';
 import {GetListPokemonService} from '../service/home.service';
