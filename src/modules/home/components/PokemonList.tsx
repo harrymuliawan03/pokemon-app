@@ -1,5 +1,5 @@
-import React, {useEffect} from 'react';
-import {FlatList, StyleSheet, ActivityIndicator} from 'react-native';
+import React, {useEffect, useState} from 'react';
+import {FlatList, StyleSheet, ActivityIndicator, View} from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import {observer} from 'mobx-react-lite';
 import {pokemonStore} from '../../../store/PokemonStore';
@@ -8,11 +8,15 @@ import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import PokemonCard from '../../../shared/components/PokemonCard';
 
 const PokemonList = observer(() => {
+  const [loading, setLoading] = useState<boolean>(false);
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
   useEffect(() => {
-    pokemonStore.fetchPokemon();
+    setLoading(true);
+    pokemonStore.fetchPokemon().then(() => {
+      setLoading(false);
+    });
   }, []);
 
   const renderFooter = () => {
@@ -30,6 +34,14 @@ const PokemonList = observer(() => {
   const handlePress = (pokemon: string) => {
     navigation.navigate('PokemonDetail', {pokemonUrl: pokemon});
   };
+
+  if (loading) {
+    return (
+      <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+        <ActivityIndicator size="large" color="#ff0000" />
+      </View>
+    );
+  }
 
   return (
     <FlatList

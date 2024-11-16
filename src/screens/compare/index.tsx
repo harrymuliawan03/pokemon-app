@@ -85,6 +85,8 @@ const CompareScreen = () => {
 
   const renderBarChart = () => {
     let data;
+    let maxValue = 100;
+
     if (selectedPokemon1 && selectedPokemon2) {
       const choosenOne = selectedPokemon1.stats.map(stat => {
         return {
@@ -106,7 +108,6 @@ const CompareScreen = () => {
           value: stat1.value,
           label: abbreviateLabel(stat1.label),
           spacing: 2,
-          // labelWidth: 30,
           labelTextStyle: {
             fontSize: 12,
             fontWeight: 'bold',
@@ -120,7 +121,11 @@ const CompareScreen = () => {
           frontColor: choosenTwo[index].frontColor,
         },
       ]);
+
+      const allValues = [...choosenOne, ...choosenTwo].map(stat => stat.value);
+      maxValue = Math.max(100, ...allValues);
     }
+
     return (
       <BarChart
         data={data}
@@ -133,6 +138,7 @@ const CompareScreen = () => {
           color: 'black',
           lineHeight: 14,
         }}
+        maxValue={maxValue}
         stepValue={10}
         spacing={15}
         isAnimated
