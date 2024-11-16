@@ -25,16 +25,27 @@ const CompareScreen = () => {
     useState<PokemonDataModel | null>(null);
   const [selectedPokemon2, setSelectedPokemon2] =
     useState<PokemonDataModel | null>(null);
+
+  // State for modal bottom sheet
   const [triggerFetchData, setTriggerFetchData] = useState<boolean | null>(
     null,
   );
-
-  // State for modal bottom sheet
   const [currentDialog, setCurrentDialog] = useState<number>(1);
   const [isOpen, setOpen] = useState(false);
   const flatListRef = useRef<any>(null);
   const offset = useSharedValue(0);
   let currentOffsetModal = 0;
+
+  const doSelect = (index: number) => {
+    if (index === 1) {
+      setCurrentDialog(1);
+      setSelectedPokemon1(null);
+    } else {
+      setCurrentDialog(2);
+      setSelectedPokemon2(null);
+    }
+    setOpen(true);
+  };
 
   const handlePokemonSelect = async (pokemon: PokemonModel, index: number) => {
     const completePokemonData = await axios.get(pokemon.url!);
@@ -65,6 +76,11 @@ const CompareScreen = () => {
         });
       }, 300);
     }
+  };
+
+  const toggleSheet = () => {
+    setOpen(!isOpen);
+    offset.value = 0;
   };
 
   const renderBarChart = () => {
@@ -140,14 +156,10 @@ const CompareScreen = () => {
     }
   }, [triggerFetchData]);
 
-  const toggleSheet = () => {
-    setOpen(!isOpen);
-    offset.value = 0;
-  };
-
   return (
     <GestureHandlerRootView style={styles.scrollContainer}>
       <ScrollView showsVerticalScrollIndicator={false}>
+        {/* Header */}
         <Image
           source={require('./../../../assets/images/bg-pokemon-3.png')}
           style={{
@@ -159,16 +171,13 @@ const CompareScreen = () => {
 
         <View style={styles.container}>
           <View style={styles.selectedContainer}>
+            {/* Selected Pokemon 1 */}
             <TouchableOpacity
               style={[
                 styles.pokemonCard,
                 {backgroundColor: 'background-color: rgba(255, 0, 0, 0.5)'},
               ]}
-              onPress={() => {
-                setCurrentDialog(1);
-                setSelectedPokemon1(null);
-                setOpen(true);
-              }}>
+              onPress={() => doSelect(1)}>
               {selectedPokemon1 ? (
                 <>
                   <Image
@@ -189,16 +198,13 @@ const CompareScreen = () => {
               )}
             </TouchableOpacity>
 
+            {/* Selected Pokemon 2 */}
             <TouchableOpacity
               style={[
                 styles.pokemonCard,
                 {backgroundColor: 'rgba(0, 0, 255, 0.6)'},
               ]}
-              onPress={() => {
-                setCurrentDialog(2);
-                setSelectedPokemon2(null);
-                setOpen(true);
-              }}>
+              onPress={() => doSelect(2)}>
               {selectedPokemon2 ? (
                 <>
                   <Image

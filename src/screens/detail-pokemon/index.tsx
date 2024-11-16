@@ -39,10 +39,6 @@ const PokemonDetailScreen: React.FC<PokemonDetailProps> = ({navigation}) => {
   const scaleAnimImage = useRef(new Animated.Value(0)).current;
   const scaleAnimSvg = useRef(new Animated.Value(0)).current;
 
-  useEffect(() => {
-    fetchPokemonDetail();
-  }, []);
-
   const fetchPokemonDetail = async () => {
     try {
       const response = await axios.get(pokemonUrl);
@@ -82,39 +78,91 @@ const PokemonDetailScreen: React.FC<PokemonDetailProps> = ({navigation}) => {
     }
   };
 
+  useEffect(() => {
+    fetchPokemonDetail();
+  }, []);
+
+  // Render loader if data is loading
   if (loading) {
-    return <ActivityIndicator size="large" color="#ff0000" />;
+    return (
+      <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+        <ActivityIndicator size="large" color="#ff0000" />
+      </View>
+    );
   }
 
+  // Render error message if data is not available
   if (!data) {
     return <Text>Error loading data</Text>;
   }
 
+  const renderPointerLabelComponent = (items: any) => {
+    let typeName;
+    switch (items[0].label) {
+      case 'H':
+        typeName = 'HP';
+        break;
+      case 'A':
+        typeName = 'Attack';
+        break;
+      case 'D':
+        typeName = 'Defense';
+        break;
+      case 'SA':
+        typeName = 'Sp. Attack';
+        break;
+      case 'SD':
+        typeName = 'Sp. Defense';
+        break;
+      case 'S':
+        typeName = 'Speed';
+        break;
+      default:
+        break;
+    }
+    return (
+      <View
+        style={{
+          height: 'auto',
+          width: 80,
+          zIndex: 9999,
+          backgroundColor: 'purple',
+          // position: 'absolute',
+          borderRadius: 4,
+          justifyContent: 'center',
+          alignItems: 'center',
+          paddingHorizontal: 10,
+          paddingVertical: 10,
+        }}>
+        <Text style={{color: 'white', fontSize: 12}}>{typeName}</Text>
+        <Text style={{color: 'white', fontSize: 12}}>{items[0].value}</Text>
+      </View>
+    );
+  };
+
   const {name, height, weight, types, stats, abilities, sprites} = data;
 
-  const backgroundColor =
-    typeColorMap[types[0].type.name] || typeColorMap.default;
+  const themeColor = typeColorMap[types[0].type.name] || typeColorMap.default;
 
   // Stats data for bar chart
   const statsData = stats.map(stat => ({
     value: stat.base_stat,
     label: abbreviateLabel(stat.stat.name),
-    frontColor: backgroundColor,
-    labelColor: '#ffffff',
+    frontColor: themeColor,
   }));
 
   return (
     <ScrollView
-      contentContainerStyle={[styles.container, {backgroundColor}]}
+      contentContainerStyle={[styles.container, {backgroundColor: themeColor}]}
       showsVerticalScrollIndicator={false}>
+      {/* Back Button */}
       <TouchableOpacity
         style={styles.backButton}
         onPress={() => navigation.goBack()}>
-        <Image
-          source={require('../../../assets/images/back-icon.png')}
-          // style={styles.backIcon}
-        />
+        <Image source={require('../../../assets/images/back-icon.png')} />
       </TouchableOpacity>
+
+      {/* Pokemon Name */}
       <Text style={styles.title}>
         {name.charAt(0).toUpperCase() + name.slice(1)}
       </Text>
@@ -140,7 +188,7 @@ const PokemonDetailScreen: React.FC<PokemonDetailProps> = ({navigation}) => {
         </Animated.View>
 
         {/* Pokemon Information */}
-        <Text style={[styles.sectionTitle, {color: backgroundColor}]}>
+        <Text style={[styles.sectionTitle, {color: themeColor}]}>
           Information
         </Text>
         <View style={styles.infoContainer}>
@@ -173,15 +221,13 @@ const PokemonDetailScreen: React.FC<PokemonDetailProps> = ({navigation}) => {
           </View>
           <View style={styles.divider} />
           <View style={styles.infoCard}>
-            <Text style={styles.infoSubtitle}>{weight} Kg</Text>
+            <Text style={styles.infoSubtitle}>{weight / 10} Kg</Text>
             <Text style={styles.infoTitle}>Weight</Text>
           </View>
         </View>
 
         {/* Pokemon Stats */}
-        <Text style={[styles.sectionTitle, {color: backgroundColor}]}>
-          Stats
-        </Text>
+        <Text style={[styles.sectionTitle, {color: themeColor}]}>Stats</Text>
         <View
           style={{
             width: '100%',
@@ -213,53 +259,7 @@ const PokemonDetailScreen: React.FC<PokemonDetailProps> = ({navigation}) => {
               radius: 0,
               pointerLabelWidth: 50,
               pointerLabelHeight: 120,
-              pointerLabelComponent: (items: any) => {
-                let typeName;
-                switch (items[0].label) {
-                  case 'H':
-                    typeName = 'HP';
-                    break;
-                  case 'A':
-                    typeName = 'Attack';
-                    break;
-                  case 'D':
-                    typeName = 'Defense';
-                    break;
-                  case 'SA':
-                    typeName = 'Sp. Attack';
-                    break;
-                  case 'SD':
-                    typeName = 'Sp. Defense';
-                    break;
-                  case 'S':
-                    typeName = 'Speed';
-                    break;
-                  default:
-                    break;
-                }
-                return (
-                  <View
-                    style={{
-                      height: 'auto',
-                      width: 80,
-                      zIndex: 9999,
-                      backgroundColor: 'purple',
-                      // position: 'absolute',
-                      borderRadius: 4,
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                      paddingHorizontal: 10,
-                      paddingVertical: 10,
-                    }}>
-                    <Text style={{color: 'white', fontSize: 12}}>
-                      {typeName}
-                    </Text>
-                    <Text style={{color: 'white', fontSize: 12}}>
-                      {items[0].value}
-                    </Text>
-                  </View>
-                );
-              },
+              pointerLabelComponent: renderPointerLabelComponent,
             }}
           />
         </View>
@@ -268,14 +268,14 @@ const PokemonDetailScreen: React.FC<PokemonDetailProps> = ({navigation}) => {
         <NotesStat />
 
         {/* Pokemon Abilities */}
-        <Text style={[styles.sectionTitle, {color: backgroundColor}]}>
+        <Text style={[styles.sectionTitle, {color: themeColor}]}>
           Abilities
         </Text>
         <View style={styles.abilitiesContainer}>
           {abilities?.map((ability, index) => (
             <View
               key={index}
-              style={[styles.abilityContainer, {backgroundColor}]}>
+              style={[styles.abilityContainer, {backgroundColor: themeColor}]}>
               <Text style={styles.abilityName}>{ability.name}</Text>
               <View style={styles.divider} />
               <Text style={styles.abilityDesc}>{ability.description}</Text>
@@ -296,7 +296,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 120,
     marginHorizontal: 20,
-    // maxWidth: Dimensions.get('window').width - 40,
     paddingVertical: 50,
     backgroundColor: '#fff',
     borderRadius: 30,
